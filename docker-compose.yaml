@@ -26,6 +26,7 @@ services:
   mosquitto:
     image: eclipse-mosquitto
     ports:
+      # External access uses 35002 (from .env), Internal access is 1883
       - "${MQTT_BROKER_PORT:-35002}:1883"
       - "${MQTT_BROKER_PORT_S:-35003}:9001"
     volumes:
@@ -52,6 +53,8 @@ services:
       - vt_example_network
     env_file:
       - .env
+    environment:
+      MQTT_BROKER_PORT: 1883
     restart: unless-stopped
 
   vt_client_a_collector:
@@ -65,10 +68,13 @@ services:
       - ./example_files:/app/data
     networks:
       - vt_example_network
+    env_file:
+      - .env
     environment:
       MQTT_BROKER_HOST: mosquitto
+      # ADDED: Force internal port to 1883
+      MQTT_BROKER_PORT: 1883
       INPUT_DIR: /app/data
-
 
   vt_client_b_collector:
     build:
@@ -81,8 +87,12 @@ services:
       - ./example_files:/app/data
     networks:
       - vt_example_network
+    env_file:      
+      - .env
     environment:
       MQTT_BROKER_HOST: mosquitto
+      # ADDED: Force internal port to 1883
+      MQTT_BROKER_PORT: 1883
       INPUT_DIR: /app/data
 
   #  Python Base Placeholder
