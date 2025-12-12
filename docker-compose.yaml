@@ -98,3 +98,5 @@ services:
 networks:
   vt_example_network:
     driver: bridge
+volumes:
+  pip-cache:
