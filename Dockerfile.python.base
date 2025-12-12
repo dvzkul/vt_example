@@ -20,5 +20,7 @@
         pip install --cache-dir=$PIP_CACHE_DIR -r /tmp/requirements.txt && \
         rm -rf $PIP_CACHE_DIR
 
+    COPY vt_shared/ /tmp/vt_shared/
+    RUN pip install /tmp/vt_shared/ && rm -rf /tmp/vt_shared/
 
     CMD ["python"]

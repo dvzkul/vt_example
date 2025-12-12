@@ -3,6 +3,8 @@ import json
 from pymongo import MongoClient
 import const
 
+from vt_shared import MasterRecord
+
 MQTT_BROKER_HOST = const.MQTT_BROKER_HOST  
 MQTT_BROKER_PORT = const.MQTT_BROKER_PORT
 MQTT_TOPIC = "master_record/insert"
