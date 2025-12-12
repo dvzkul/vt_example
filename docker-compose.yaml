@@ -26,8 +26,8 @@ services:
   mosquitto:
     image: eclipse-mosquitto
     ports:
-      - "${MONGO_PORT:-35002}:1883"
-      - "${MONGO_PORT_S:-35003}:9001"
+      - "${MQTT_BROKER_PORT:-35002}:1883"
+      - "${MQTT_BROKER_PORT_S:-35003}:9001"
     volumes:
       - ${VT_EXAMPLE_DATA_LOCATION}/mqtt/config:/mosquitto/config
       - ${VT_EXAMPLE_DATA_LOCATION}/mqtt/data:/mosquitto/data
