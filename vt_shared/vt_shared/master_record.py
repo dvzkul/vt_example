@@ -8,6 +8,8 @@ class MasterRecord:
     last_name: str
     ssn: str
     hourly_rate: float
+    client_id: str
+    source_file: str
     attributes: dict = field(default_factory=dict)
 
     def to_json(self) -> str:
@@ -17,6 +19,8 @@ class MasterRecord:
             "last_name": self.last_name,
             "ssn": self.ssn,
             "hourly_rate": self.hourly_rate,
+            "client_id": self.client_id,
+            "source_file": self.source_file,
             "attributes": self.attributes
         })
 
@@ -29,6 +33,8 @@ class MasterRecord:
             last_name=obj["last_name"],
             ssn=obj["ssn"],
             hourly_rate=obj["hourly_rate"],
+            client_id=obj["client_id"],
+            source_file=obj["source_file"],
             attributes=obj.get("attributes", {})
     )
         

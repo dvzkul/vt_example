@@ -95,6 +95,41 @@ services:
       MQTT_BROKER_PORT: 1883
       INPUT_DIR: /app/data
 
+
+  vt_error_handler:
+    build:
+      context: ./vt_error_handler
+      dockerfile: Dockerfile.vt_error_handler
+    depends_on:
+      - mosquitto
+      - python-base
+    networks:
+      - vt_example_network
+    env_file:      
+      - .env
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      # ADDED: Force internal port to 1883
+      MQTT_BROKER_PORT: 1883
+      INPUT_DIR: /app/data
+
+  vt_validation:
+    build:
+      context: ./vt_error_handler
+      dockerfile: Dockerfile.vt_error_handler
+    depends_on:
+      - mosquitto
+      - python-base
+    networks:
+      - vt_example_network
+    env_file:      
+      - .env
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      # ADDED: Force internal port to 1883
+      MQTT_BROKER_PORT: 1883
+      INPUT_DIR: /app/data
+
   #  Python Base Placeholder
   python-base:
     build:

@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 from dataclasses import dataclass, field
 import const
 
-from vt_shared import MasterRecord
+from vt_shared import MasterRecord, ParseError
 
 
 MQTT_BROKER_HOST = const.MQTT_BROKER_HOST  
@@ -16,10 +16,11 @@ MQTT_BROKER_PORT = const.MQTT_BROKER_PORT
 MQTT_USERNAME = const.MQTT_USERNAME
 MQTT_PASSWORD = const.MQTT_PASSWORD
 MQTT_TOPIC = "master_record/insert"
+MQTT_ERROR_TOPIC = "master_record/errors"
 
 
 INPUT_DIR = const.SAMPLE_FILES_DIR
-INPUT_FILENAME = "client_a.txt"
+INPUT_FILENAME = "client_b.txt"
 INPUT_FILE_PATH = os.path.join(INPUT_DIR, INPUT_FILENAME)
 CHECK_INTERVAL_SECONDS = 300  # 5 minutes
 
@@ -56,8 +57,11 @@ def process_file(mqtt_client):
     if not os.path.exists(INPUT_FILE_PATH):
         logging.info(f"File not found: {INPUT_FILE_PATH}")
         return
+    
+    #I would actually process the file from where the SFTP put it
 
     logging.info(f"Processing file: {INPUT_FILE_PATH}")
+    file_name = os.path.basename(INPUT_FILE_PATH)
     
     try:
         with open(INPUT_FILE_PATH, mode='r', newline='', encoding='utf-8') as tsv_file:
@@ -79,13 +83,30 @@ def process_file(mqtt_client):
                     logging.info(f"Published record for: {record.first_name} {record.last_name}")
                     
                 except KeyError as e:
-                    logging.error(f"Missing column in row: {e}")
+                    msg = f"Missing column in row: {e}"
+                    logging.error(msg)
+                    handle_error(mqtt_client, msg, row, file_name)
+                    
                 except Exception as e:
-                    logging.error(f"Error processing row: {e}")
+                    msg = f"Error processing row: {e}"
+                    logging.error(msg)
+                    handle_error(mqtt_client, msg, row, file_name)
                     
         
     except Exception as e:
         logging.error(f"Failed to read file: {e}")
+
+def handle_error(mqtt_client, error_message, row=None, file_name=None):
+    error_obj = ParseError(
+            error=str(error_message),
+            source="client_b_collector", 
+            file_name=str(file_name),
+            row_data=row if row else {}
+        )
+
+
+    mqtt_client.publish(MQTT_ERROR_TOPIC, error_obj.to_json())
+    logging.error(f"Published error to MQTT: {error_message}")
 
 
 def main():

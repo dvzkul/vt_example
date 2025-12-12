@@ -7,7 +7,7 @@ import logging
 import paho.mqtt.client as mqtt
 import const
 # Import the shared library
-from vt_shared import MasterRecord
+from vt_shared import MasterRecord, ParseError
 
 # --- Configuration ---
 MQTT_BROKER_HOST = const.MQTT_BROKER_HOST  
@@ -15,6 +15,7 @@ MQTT_BROKER_PORT = const.MQTT_BROKER_PORT
 MQTT_USERNAME = const.MQTT_USERNAME
 MQTT_PASSWORD = const.MQTT_PASSWORD
 MQTT_TOPIC = "master_record/insert"
+MQTT_ERROR_TOPIC = "master_record/errors"
 
 
 INPUT_DIR = os.getenv("INPUT_DIR", "/app/data")
@@ -32,11 +33,20 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def fetch_from_sftp():
     """
     Placeholder method to fetch file from an SFTP location.
+    I don't know the details.  I assume that we would just check
+    for new files and download them as needed.
     """
+
+
+
+
     sftp_host = os.getenv("SFTP_HOST", "sftp.client-a.com")
-    logging.info(f"Checking SFTP at {sftp_host} for {INPUT_FILENAME}...")
-    # sftp.get(remote_path, INPUT_FILE_PATH)
+
+    #I would then store the flat file somewhere S3 bucket, etc.
+    #Then go on to process the file
+
     logging.info("SFTP download skipped (reading local disk).")
+
 
 # --- Processing Logic ---
 def parse_salary_to_hourly(value_str):
@@ -57,11 +67,17 @@ def parse_salary_to_hourly(value_str):
         return 0.0
 
 def process_file(mqtt_client):
+    
+    #I would actually process the file from where the SFTP put it
+    
     if not os.path.exists(INPUT_FILE_PATH):
         logging.info(f"File not found: {INPUT_FILE_PATH}")
         return
 
     logging.info(f"Processing file: {INPUT_FILE_PATH}")
+
+    
+    file_name = os.path.basename(INPUT_FILE_PATH)
     
     try:
         with open(INPUT_FILE_PATH, mode='r', newline='', encoding='utf-8') as csv_file:
@@ -90,15 +106,31 @@ def process_file(mqtt_client):
                     logging.info(f"Published record for: {record.first_name} {record.last_name} (${record.hourly_rate}/hr)")
                     
                 except KeyError as e:
-                    logging.error(f"Missing column in row: {e}")
+                    msg = f"Missing column in row: {e}"
+                    logging.error(msg)
+                    handle_error(mqtt_client, msg, row, file_name)
+                    
                 except Exception as e:
-                    logging.error(f"Error processing row: {e}")
+                    msg = f"Error processing row: {e}"
+                    logging.error(msg)
+                    handle_error(mqtt_client, msg, row, file_name)
                     
 
         
     except Exception as e:
         logging.error(f"Failed to read file: {e}")
 
+def handle_error(mqtt_client, error_message, row=None, file_name=None):
+    error_obj = ParseError(
+            error=str(error_message),
+            source="client_a_collector", 
+            file_name=str(file_name),
+            row_data=row if row else {}
+        )
+
+
+    mqtt_client.publish(MQTT_ERROR_TOPIC, error_obj.to_json())
+    logging.error(f"Published error to MQTT: {error_message}")
 
 def main():
     client = mqtt.Client(client_id="client_a_collector")
