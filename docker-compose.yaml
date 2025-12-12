@@ -5,7 +5,7 @@ services:
   mongo-db:
     image: mongo:6.0
     ports:
-      - "${MONGO_PORT:-30001}:${MONGO_PORT:-30001}"
+      - "${MONGO_PORT:-35001}:${MONGO_PORT:-35001}"
     volumes:
       - ${VT_EXAMPLE_DATA_LOCATION}/mongodb:/data/db
     networks:
@@ -26,8 +26,8 @@ services:
   mosquitto:
     image: eclipse-mosquitto
     ports:
-      - "${MONGO_PORT:-30002}:1883"
-      - "${MONGO_PORT_S:-30003}:9001"
+      - "${MONGO_PORT:-35002}:1883"
+      - "${MONGO_PORT_S:-35003}:9001"
     volumes:
       - ${VT_EXAMPLE_DATA_LOCATION}/mqtt/config:/mosquitto/config
       - ${VT_EXAMPLE_DATA_LOCATION}/mqtt/data:/mosquitto/data
