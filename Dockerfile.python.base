@@ -1,0 +1,24 @@
+    FROM python:3.12-slim
+
+    # Environment
+    ENV DEBIAN_FRONTEND=noninteractive
+    ENV PIP_CACHE_DIR=/tmp/pip-cache
+
+    # Set working directory
+    WORKDIR /app
+
+    # Install minimal system dependencies (including git for pip installs)
+    RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+            git \
+            build-essential \
+        && rm -rf /var/lib/apt/lists/*
+
+    # Upgrade pip and install core requirements
+    COPY requirements.python-base.txt /tmp/requirements.txt
+    RUN pip install --cache-dir=$PIP_CACHE_DIR --upgrade pip setuptools wheel && \
+        pip install --cache-dir=$PIP_CACHE_DIR -r /tmp/requirements.txt && \
+        rm -rf $PIP_CACHE_DIR
+
+    # Default command (overrideable)
+    CMD ["python"]

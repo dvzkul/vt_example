@@ -1,0 +1,54 @@
+name: vt_example
+services:
+
+  #Infrastructure
+  mongo-db:
+    image: mongo:6.0
+    ports:
+      - "${MONGO_PORT:-30001}:${MONGO_PORT:-30001}"
+    volumes:
+      - ${VT_EXAMPLE_DATA_LOCATION}/mongodb:/data/db
+    networks:
+      - vt_example_network
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-vt_example_db}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS}
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongo-db:${MONGO_PORT:-27017} --quiet
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  mosquitto:
+    image: eclipse-mosquitto
+    ports:
+      - "${MONGO_PORT:-30002}:1883"
+      - "${MONGO_PORT_S:-30003}:9001"
+    volumes:
+      - ${VT_EXAMPLE_DATA_LOCATION}/mqtt/config:/mosquitto/config
+      - ${VT_EXAMPLE_DATA_LOCATION}/mqtt/data:/mosquitto/data
+      - ${VT_EXAMPLE_DATA_LOCATION}/mqtt/log:/mosquitto/log
+    networks:
+      - vt_example_network
+    env_file:
+      - .env
+    restart: unless-stopped
+
+
+  #  Python Base Placeholder
+  python-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.python_base
+    container_name: vt_example_python_base
+    volumes:
+      - pip-cache:/tmp/pip-cache
+    image: vt_example_python_base:latest
+
+networks:
+  vt_example_network:
+    driver: bridge
