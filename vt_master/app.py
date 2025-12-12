@@ -14,7 +14,6 @@ def initialize_services():
    global mqtt_client, mongo_client, db, collection
 
    mqtt_client = mqtt.Client()
-   mqtt_client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)
    mqtt_client.on_message = on_message
    mqtt_client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)
    mqtt_client.subscribe(MQTT_TOPIC)
@@ -25,6 +24,8 @@ def initialize_services():
    collection = db["master_records"]
 
 def on_message(client, userdata, msg):
+    
+
    try:
        payload = msg.payload.decode('utf-8')
        record = json.loads(payload)

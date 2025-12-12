@@ -30,7 +30,5 @@ class MasterRecord:
             ssn=obj["ssn"],
             hourly_rate=obj["hourly_rate"],
             attributes=obj.get("attributes", {})
-
-            name=obj["name"],
-            attributes=obj.get("attributes", {})
-        )
+    )
+        

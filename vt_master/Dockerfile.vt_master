@@ -1,0 +1,8 @@
+FROM vt_example_python_base:latest
+
+
+WORKDIR /app
+
+COPY vt_master/ ./vt_master/
+
+CMD ["python", "-u", "vt_master/app.py"]

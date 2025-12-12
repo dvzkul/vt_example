@@ -7,7 +7,7 @@
     # Set working directory
     WORKDIR /app
 
-    # Install minimal system dependencies (including git for pip installs)
+    # Install minimal system dependencies
     RUN apt-get update && \
         apt-get install -y --no-install-recommends \
             git \
@@ -20,5 +20,5 @@
         pip install --cache-dir=$PIP_CACHE_DIR -r /tmp/requirements.txt && \
         rm -rf $PIP_CACHE_DIR
 
-    # Default command (overrideable)
+
     CMD ["python"]

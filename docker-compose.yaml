@@ -38,6 +38,23 @@ services:
       - .env
     restart: unless-stopped
 
+  #Our Services
+  vt_master:
+    build:
+      context: .
+      dockerfile: Dockerfile.vt_master
+    image: vt_example_vt_master:latest
+    depends_on:
+      - mongo-db
+      - mosquitto
+      - python-base
+    networks:
+      - vt_example_network
+    env_file:
+      - .env
+    restart: unless-stopped
+
+
 
   #  Python Base Placeholder
   python-base:
