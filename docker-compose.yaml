@@ -54,7 +54,36 @@ services:
       - .env
     restart: unless-stopped
 
+  vt_client_a_collector:
+    build:
+      context: .
+      dockerfile: Dockerfile.client_a_collector
+    depends_on:
+      - mosquitto
+      - python-base
+    volumes:
+      - ./example_files:/app/data
+    networks:
+      - vt_example_network
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      INPUT_DIR: /app/data
 
+
+  vt_client_b_collector:
+    build:
+      context: .
+      dockerfile: Dockerfile.client_b_collector
+    depends_on:
+      - mosquitto
+      - python-base
+    volumes:
+      - ./example_files:/app/data
+    networks:
+      - vt_example_network
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      INPUT_DIR: /app/data
 
   #  Python Base Placeholder
   python-base:

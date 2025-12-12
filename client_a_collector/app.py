@@ -5,49 +5,53 @@ import json
 import uuid
 import logging
 import paho.mqtt.client as mqtt
-from dataclasses import dataclass, field
 import const
-
+# Import the shared library
 from vt_shared import MasterRecord
 
-
+# --- Configuration ---
 MQTT_BROKER_HOST = const.MQTT_BROKER_HOST  
 MQTT_BROKER_PORT = const.MQTT_BROKER_PORT
 MQTT_TOPIC = "master_record/insert"
 
 
-INPUT_DIR = const.SAMPLE_FILES_DIR
-INPUT_FILENAME = "client_a.txt"
+INPUT_DIR = os.getenv("INPUT_DIR", "/app/data")
+INPUT_FILENAME = "client_a.csv"
 INPUT_FILE_PATH = os.path.join(INPUT_DIR, INPUT_FILENAME)
 CHECK_INTERVAL_SECONDS = 300  # 5 minutes
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+WORK_HOURS_PER_YEAR = 2080
 
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def fetch_from_sftp():
     """
     Placeholder method to fetch file from an SFTP location.
-    In a real implementation, this would use paramiko or pysftp to 
-    download the file to INPUT_FILE_PATH.
     """
-    sftp_host = os.getenv("SFTP_HOST", "sftp.example.com")
-    sftp_user = os.getenv("SFTP_USER", "user")
-    sftp_pass = os.getenv("SFTP_PASS", "pass")
+    sftp_host = os.getenv("SFTP_HOST", "sftp.client-a.com")
+    logging.info(f"Checking SFTP at {sftp_host} for {INPUT_FILENAME}...")
+    # sftp.get(remote_path, INPUT_FILE_PATH)
+    logging.info("SFTP download skipped (reading local disk).")
+
+# --- Processing Logic ---
+def parse_salary_to_hourly(value_str):
+    """
+    Parses a salary string like "20,000" into an hourly float.
+    Assumes 2080 working hours/year.
+    """
+    if not value_str:
+        return 0.0
     
-    logging.info(f"Connecting to SFTP at {sftp_host}...")
-    # Logic to download file would go here
-
-    logging.info("SFTP download skipped for demonstration (reading local disk).")
-
-
-def parse_currency(value_str):
-    """Parses a currency string like '$20.00' into a float."""
+    # Remove currency symbols and commas
     clean_val = value_str.replace('$', '').replace(',', '').strip()
     try:
-        return float(clean_val)
+        annual_salary = float(clean_val)
+        return round(annual_salary / WORK_HOURS_PER_YEAR, 2)
     except ValueError:
+        logging.warning(f"Could not parse salary: {value_str}")
         return 0.0
 
 def process_file(mqtt_client):
@@ -58,36 +62,43 @@ def process_file(mqtt_client):
     logging.info(f"Processing file: {INPUT_FILE_PATH}")
     
     try:
-        with open(INPUT_FILE_PATH, mode='r', newline='', encoding='utf-8') as tsv_file:
-            reader = csv.DictReader(tsv_file, delimiter='\t')
+        with open(INPUT_FILE_PATH, mode='r', newline='', encoding='utf-8') as csv_file:
+
+            reader = csv.DictReader(csv_file)
             
             for row in reader:
                 try:
+                    # Logic specific to Client A (CSV)
+                    hourly = parse_salary_to_hourly(row.get('base_salary'))
+                    
                     record = MasterRecord(
                         id=str(uuid.uuid4()),
-                        first_name=row['name_first'],
-                        last_name=row['name_last'],
+                        first_name=row['first_name'],
+                        last_name=row['last_name'],
                         ssn=row['ssn'],
-                        hourly_rate=parse_currency(row['hourly_rate']),
-                        attributes={"source": "client_b_collector"}
+                        hourly_rate=hourly,
+                        attributes={
+                            "source": "client_a_csv",
+                            "original_salary": row.get('base_salary')
+                        }
                     )
                     
-                 
+      
                     mqtt_client.publish(MQTT_TOPIC, record.to_json())
-                    logging.info(f"Published record for: {record.first_name} {record.last_name}")
+                    logging.info(f"Published record for: {record.first_name} {record.last_name} (${record.hourly_rate}/hr)")
                     
                 except KeyError as e:
                     logging.error(f"Missing column in row: {e}")
                 except Exception as e:
                     logging.error(f"Error processing row: {e}")
                     
+
         
     except Exception as e:
         logging.error(f"Failed to read file: {e}")
 
 
 def main():
-
     client = mqtt.Client()
     
     try:
@@ -98,16 +109,12 @@ def main():
         logging.error(f"Could not connect to MQTT Broker: {e}")
         return
 
-    logging.info("Starting collector service loop...")
+    logging.info("Starting Client A collector service...")
     
     while True:
-
         fetch_from_sftp()
-        
-
         process_file(client)
         
-
         logging.info(f"Sleeping for {CHECK_INTERVAL_SECONDS} seconds...")
         time.sleep(CHECK_INTERVAL_SECONDS)
 

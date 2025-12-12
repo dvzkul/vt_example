@@ -1,0 +1,10 @@
+# Inherit from the base image (which now includes vt_shared)
+FROM vt_example_python_base:latest
+
+WORKDIR /app
+
+
+COPY client_b_collector/ ./client_b_collector/
+
+
+CMD ["python", "-u", "client_b_collector/app.py"]
