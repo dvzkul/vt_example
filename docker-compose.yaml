@@ -89,7 +89,7 @@ services:
   python-base:
     build:
       context: .
-      dockerfile: Dockerfile.python_base
+      dockerfile: Dockerfile.python.base
     container_name: vt_example_python_base
     volumes:
       - pip-cache:/tmp/pip-cache
