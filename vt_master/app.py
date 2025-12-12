@@ -7,6 +7,8 @@ from vt_shared import MasterRecord
 
 MQTT_BROKER_HOST = const.MQTT_BROKER_HOST  
 MQTT_BROKER_PORT = const.MQTT_BROKER_PORT
+MQTT_USERNAME = const.MQTT_USERNAME
+MQTT_PASSWORD = const.MQTT_PASSWORD
 MQTT_TOPIC = "master_record/insert"
 
 MONGO_URI = const.MONGO_URI
@@ -15,7 +17,8 @@ MONGO_DB_NAME = const.MONGO_DB_NAME
 def initialize_services():
    global mqtt_client, mongo_client, db, collection
 
-   mqtt_client = mqtt.Client()
+   mqtt_client = mqtt.Client(client_id="vt_master_app")
+   mqtt_client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
    mqtt_client.on_message = on_message
    mqtt_client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT)
    mqtt_client.subscribe(MQTT_TOPIC)

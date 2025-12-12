@@ -13,6 +13,8 @@ from vt_shared import MasterRecord
 
 MQTT_BROKER_HOST = const.MQTT_BROKER_HOST  
 MQTT_BROKER_PORT = const.MQTT_BROKER_PORT
+MQTT_USERNAME = const.MQTT_USERNAME
+MQTT_PASSWORD = const.MQTT_PASSWORD
 MQTT_TOPIC = "master_record/insert"
 
 
@@ -88,7 +90,8 @@ def process_file(mqtt_client):
 
 def main():
 
-    client = mqtt.Client()
+    client = mqtt.Client(client_id="client_b_collector")
+    client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
     
     try:
         client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT, 60)
