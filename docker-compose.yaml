@@ -41,7 +41,7 @@ services:
   #Our Services
   vt_master:
     build:
-      context: .
+      context: ./vt_master
       dockerfile: Dockerfile.vt_master
     image: vt_example_vt_master:latest
     depends_on:
@@ -56,7 +56,7 @@ services:
 
   vt_client_a_collector:
     build:
-      context: .
+      context: ./client_a_collector
       dockerfile: Dockerfile.client_a_collector
     depends_on:
       - mosquitto
@@ -72,7 +72,7 @@ services:
 
   vt_client_b_collector:
     build:
-      context: .
+      context: ./client_b_collector
       dockerfile: Dockerfile.client_b_collector
     depends_on:
       - mosquitto
