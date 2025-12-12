@@ -4,7 +4,7 @@ FROM vt_example_python_base:latest
 WORKDIR /app
 
 
-COPY client_b_collector/ ./client_b_collector/
+COPY . /app
 
 
-CMD ["python", "-u", "client_b_collector/app.py"]
+CMD ["python", "-u", "app.py"]
