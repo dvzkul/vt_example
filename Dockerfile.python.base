@@ -15,7 +15,7 @@
         && rm -rf /var/lib/apt/lists/*
 
     # Upgrade pip and install core requirements
-    COPY requirements.python-base.txt /tmp/requirements.txt
+    COPY requirements.python_base.txt /tmp/requirements.txt
     RUN pip install --cache-dir=$PIP_CACHE_DIR --upgrade pip setuptools wheel && \
         pip install --cache-dir=$PIP_CACHE_DIR -r /tmp/requirements.txt && \
         rm -rf $PIP_CACHE_DIR
